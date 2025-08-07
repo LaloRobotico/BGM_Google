@@ -16,10 +16,10 @@ app = Flask(__name__)
 # Configuración del servidor SMTP
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
-SMTP_USERNAME = 'bullyguardmia@gmail.com'       # ⚠️ Reemplaza con tu correo real
-SMTP_PASSWORD = 'wvmq qjfi tmei wtcv'     # ⚠️ Reemplaza con tu contraseña o App Password
+SMTP_USERNAME   = os.getenv("SMTP_USERNAME")
+SMTP_PASSWORD   = os.getenv("SMTP_PASSWORD")   # ⚠️ Reemplaza con tu contraseña o App Password
 
-GEMINI_API_KEY = 'AIzaSyB9KqHC08fitqBF67HN68a84EoDrCqayFE'
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "models/gemini-2.0-flash"
 GEMINI_URL = (
     f'https://generativelanguage.googleapis.com/v1beta/'
