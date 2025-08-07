@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BullyGuard MIA RELOADED</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand+SC:wght@300&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="seccion-vacia"></div>
+        <div class="seccion-interaccion">
+            <div class="seccion-avatar">
+                <img id="robot" src="{{ url_for('static', filename='images/robot-neutral.png') }}" alt="MIA">
+                <button id="btn-iniciar" onclick="iniciarConversacion()">Iniciar Conversación</button>
+                <input type="email" id="email" placeholder="E-MAIL">
+            </div>
+            <div class="seccion-vinedas">
+                <div class="vineda mia">
+                    <p id="texto-ia">¡Hola! Soy MIA. ¿Cómo te llamas?</p>
+                </div>
+            </div>
+        </div>
+        <div class="seccion-interaccion">
+            <div class="seccion-avatar"></div>
+            <div class="seccion-vinedas">
+                <div class="vineda usuario">
+                    <p id="texto-usuario">Tu respuesta aparecerá aquí.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
