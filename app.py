@@ -67,18 +67,6 @@ def index():
     pregunta_Quieres_agregar = ''
     return render_template('index.html')
 
-@app.route("/escuchar", methods=["POST"])
-def escuchar():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        try:
-            recognizer.adjust_for_ambient_noise(source, duration=1)
-            audio = recognizer.listen(source)
-            texto = recognizer.recognize_google(audio, language="es")
-            return jsonify({"mensaje": texto})
-        except Exception:
-            return jsonify({"mensaje": None})
-
 @app.route("/interactuar", methods=["POST"])
 def interactuar():
     global Edad
