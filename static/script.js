@@ -28,72 +28,88 @@ async function iniciarConversacion() {
 async function escuchar(tipo) {
     document.getElementById("robot").src = "/static/images/robot-escuchando.png";
 
-    try {
-        const response = await fetch("/escuchar", { method: "POST" });
-        const data = await response.json();
+    return new Promise((resolve) => {
+        try {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "es-ES";
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
-        if (!data.mensaje) {
-            await hablar("No entendí, ¿puedes repetirlo?");
-            return await escuchar(tipo);
+            recognition.onresult = async (event) => {
+                const mensaje = event.results[0][0].transcript;
+                actualizarVinedaUsuario(mensaje);
+
+                if (tipo === "nombre") {
+                    await fetch("/guardar_dato", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tipo: "nombre", valor: mensaje })
+                    });
+                    await hablar(`Mucho gusto, ${mensaje}. ¿Cuántos años tienes?`);
+                    actualizarVinedaIA(`Mucho gusto, ${mensaje}. ¿Cuántos años tienes?`);
+                    await escuchar("edad");
+
+                } else if (tipo === "edad") {
+                    await fetch("/guardar_dato", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tipo: "edad", valor: mensaje })
+                    });
+                    await hablar("Gracias, ahora dime, ¿cuál es tu animal favorito?");
+                    actualizarVinedaIA("Gracias, ahora dime, ¿cuál es tu animal favorito?");
+                    await escuchar("animal");
+
+                } else if (tipo === "animal") {
+                    await fetch("/guardar_dato", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tipo: "animal", valor: mensaje })
+                    });
+                    await hablar("Interesante elección. Ahora puedes hacerme tres preguntas. Pregúntame lo que quieras o cuéntame algo.");
+                    actualizarVinedaIA("Interesante elección. Ahora puedes hacerme tres preguntas. Pregúntame lo que quieras o cuéntame algo.");
+                    await escuchar("pregunta");
+
+                } else if (tipo === "pregunta") {
+                    preguntasNiño++;
+                    await fetch("/guardar_respuesta_nino", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ respuesta: mensaje })
+                    });
+                    await obtenerRespuesta(mensaje);
+
+                } else if (tipo === "pregunta_mia") {
+                    preguntasMIA++;
+                    await fetch("/guardar_respuesta_mia", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ respuesta: mensaje })
+                    });
+                    if (preguntasMIA < maxPreguntas) {
+                        await hacerPreguntaMIA();
+                    } else {
+                        await preguntarAgregarAlgoMas();
+                    }
+
+                } else if (tipo === "agregar") {
+                    await finalizarInteraccion();
+                }
+
+                resolve();
+            };
+
+            recognition.onerror = async (error) => {
+                console.error("Error en reconocimiento de voz:", error);
+                await hablar("Hubo un problema al escuchar, intenta nuevamente.");
+                await escuchar(tipo);
+            };
+
+            recognition.start();
+        } catch (error) {
+            console.error("Error general en escuchar():", error);
+            hablar("Hubo un problema al iniciar el reconocimiento de voz.");
         }
-
-        actualizarVinedaUsuario(data.mensaje);
-
-        if (tipo === "nombre") {
-            await fetch("/guardar_dato", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tipo: "nombre", valor: data.mensaje })
-            });
-            await hablar(`Mucho gusto, ${data.mensaje}. ¿Cuántos años tienes?`);
-            actualizarVinedaIA(`Mucho gusto, ${data.mensaje}. ¿Cuántos años tienes?`);
-            await escuchar("edad");
-        } else if (tipo === "edad") {
-            await fetch("/guardar_dato", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tipo: "edad", valor: data.mensaje })
-            });
-            await hablar("Gracias, ahora dime, ¿cuál es tu animal favorito?");
-            actualizarVinedaIA("Gracias, ahora dime, ¿cuál es tu animal favorito?");
-            await escuchar("animal");
-        } else if (tipo === "animal") {
-            await fetch("/guardar_dato", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tipo: "animal", valor: data.mensaje })
-            });
-            await hablar("Interesante elección. Ahora puedes hacerme tres preguntas, Preguntame lo que quieras o cuentame algo.");
-            actualizarVinedaIA("Interesante elección. Ahora puedes hacerme tres preguntas, Preguntame lo que quieras o cuentame algo");
-            await escuchar("pregunta");
-        } else if (tipo === "pregunta") {
-            preguntasNiño++;
-            await fetch("/guardar_respuesta_nino", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ respuesta: data.mensaje })
-            });
-            await obtenerRespuesta(data.mensaje);
-        } else if (tipo === "pregunta_mia") {
-            preguntasMIA++;
-            await fetch("/guardar_respuesta_mia", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ respuesta: data.mensaje })
-            });
-            if (preguntasMIA < maxPreguntas) {
-                await hacerPreguntaMIA();
-            } else {
-                await preguntarAgregarAlgoMas();
-            }
-        } else if (tipo === "agregar") {
-            await finalizarInteraccion();
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        await hablar("Hubo un problema al escuchar, intenta nuevamente.");
-        await escuchar(tipo);
-    }
+    });
 }
 
 async function obtenerRespuesta(pregunta) {
